@@ -1,58 +1,93 @@
-#---fhis program extracts the points from WW3 corresponding 
-#---to the NDBC buoy stations 
-#%%
-import os,sys
-import json
+import os
 import glob
-import pandas as pd
+import json
 import numpy as np
 import xarray as xr
-from scipy.interpolate import griddata
-import xarray as xr
-import numpy as np
-from glob import glob
 from natsort import natsorted
 
-def nearest(ds, x,y):
-    return np.argmin(np.abs(ds.longitude.values-x)+np.abs(ds.latitude.values-y))
+def nearest(ds, x, y):
+    """Find the index of the nearest point in the dataset."""
+    return np.argmin(np.abs(ds.longitude.values - x) + np.abs(ds.latitude.values - y))
 
-
-
-def buoy_extraction(base,x,y,outname, variables):
-
-    buffer=[]
-    for f in natsorted(glob(base)):
-        print (f)
-        ds=xr.open_dataset(f)
-        ctrl = check_data(f)
-        if ctrl == True:
-
-           ds=ds.isel(node=nearest(ds, x, y))[variables]
-           #ds=ds.interp(node(ds,x,y),method='linear')[variables]        
-           print(x,y)
-           print('#-----#')
-           buffer.append(ds)
+def buoy_extraction(base, x, y, outname, variables, grid_type):
+    """Extract equivalent buoy point data from WW3 files."""
+    buffer = []
+    for f in natsorted(glob.glob(base)):
+        print(f)
+        ds = xr.open_dataset(f)
+        
+        if grid_type == 'unstructured':
+            ds = ds.isel(node=nearest(ds, x, y))[variables]
+            #ds=ds.interp(node(ds,x,y),method='linear')[variables] #another way
+        elif grid_type == 'structured':
+            ds = ds.sel(lat=y, lon=x, method='nearest')[variables]
         else:
-            skip   
-    out=xr.concat(buffer,dim='time')
+            raise ValueError("grid_type must be 'unstructured' or 'structured'")
+        
+        print(x, y)
+        print('#-----#')
+        buffer.append(ds)
+
+    out = xr.concat(buffer, dim='time')
     out.to_netcdf(f'{outname}.nc')
 
-variable=['hs'] 
+def load_buoy_points(file_path):
+    """Load buoy points from a JSON file."""
+    with open(file_path, 'r') as file:
+        points = json.load(file)
+    return points
 
-#---for NDBC buoys
-with open('./pointsNDBC.info', 'r') as file:
-     points = json.load(file)
+def process_buoys(points, input_path, output_path, variables, grid_type):
+    """Process all buoy points and save extracted data."""
+    for name, info in points.items():
+        pto = name
+        x = info['x']
+        y = info['y']
+        print("Processing buoy id:", pto)
+        fileout = f'ww3_{pto}'
+        buoy_extraction(input_path, x, y, os.path.join(output_path, fileout), variables, grid_type)
 
-#---fpath for ww3 files
-arqin='/Users/jtakeo/googleDrive/myProjects/myBuoyTools/ndbc/data/ww3/ww3.*.nc'
-#---fpath for the ww3 extracted points
-arqout='/Users/jtakeo/googleDrive/myProjects/myBuoyTools/ndbc/data/ww3/points/'
+def configure_experiment(exp_type):
+    """Configure the experiment based on the chosen type."""
+    if exp_type == 'unstructured_ww3':
+        exp = 'expb2_143_imptot'
+        grid_type = 'unstructured'
+        variables = ['hs']
+        input_path = f'/work/cmcc/jc11022/simulations/uGlobWW3/{exp}/output/ww3.*.nc'
+        output_path = f'/work/cmcc/jc11022/simulations/uGlobWW3/{exp}/output/points/'
+    elif exp_type == 'structured_ww3':
+        exp = 'expb2_143_imptot'
+        grid_type = 'structured'
+        variables = ['hs']
+        input_path = f'/work/cmcc/jc11022/simulations/uGlobWW3/{exp}/output/ww3.*.nc'
+        output_path = f'/work/cmcc/jc11022/simulations/uGlobWW3/{exp}/output/points/'
+    elif exp_type == 'satellite':
+        exp = 'regridUnst'
+        grid_type = 'structured'
+        variables = ['WWM_1']
+        input_path = f'/work/cmcc/ww3_cst-dev/tools/regridUnst/WWM/REG_2019*.nc'
+        output_path = f'/work/cmcc/jc11022/simulations/uGlobWW3/{exp}/points/'
+    else:
+        raise ValueError("exp_type must be 'unstructured_ww3', 'structured_ww3', or 'satellite'")
+    
+    return input_path, output_path, variables, grid_type
 
-for name, info in points.items():
-    pto = f"{name}"; x = points[f"{name}"]['x']; y = points[f"{name}"]['y']
-    print("Doing buoy id: ",pto)
-    fileout=f'ww3_{pto}'   
-    buoy_extraction(arqin,x,y,os.path.join(arqout, fileout),variable)
+def main():
+    """Main function to run the processing."""
+    # Points file
+    points_file = './pointsComparison.info'
+    
+    # Load buoy points
+    points = load_buoy_points(points_file)
 
+    # Choose experiment type: 'unstructured_ww3', 'structured_ww3', or 'satellite'
+    exp_type = 'satellite'  # Change this as needed
 
-# %%
+    # Configure experiment
+    input_path, output_path, variables, grid_type = configure_experiment(exp_type)
+    
+    # Process buoys
+    process_buoys(points, input_path, output_path, variables, grid_type)
+
+if __name__ == "__main__":
+    main()
