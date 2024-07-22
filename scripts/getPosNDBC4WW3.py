@@ -16,7 +16,7 @@ def get_lat_lon_area(file_path):
             return latitudes, longitudes, area
     return None, None, None
 
-directory_path = '../data/insitu/'  # Replace with your directory path
+directory_path = '/data/cmcc/jc11022/buoys/ndbc/'  # Replace with your directory path
 points = {}
 
 # List NetCDF files in the directory
