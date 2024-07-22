@@ -175,8 +175,8 @@ def check_data(buoy,model):
 
 
 # Definindo suas variáveis e caminhos
-buoy_path = '../data/insitu/'
-model_path = '../data/ww3/points/'
+buoy_path = '/data/cmcc/jc11022/buoys/ndbc/'
+model_path = '/data/cmcc/jc11022/ww3/points/'
 #stations = ['42001', '42002']  
 
 arqs_nc = [arq for arq in os.listdir(buoy_path) if arq.endswith('.nc')]

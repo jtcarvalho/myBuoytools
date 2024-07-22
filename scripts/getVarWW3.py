@@ -8,6 +8,7 @@ from natsort import natsorted
 def nearest(ds, x, y):
     """Find the index of the nearest point in the dataset."""
     return np.argmin(np.abs(ds.longitude.values - x) + np.abs(ds.latitude.values - y))
+    #return np.argmin(np.abs(ds.SCHISM_hgrid_node_x.values - x) + np.abs(ds.SCHISM_hgrid_node_y.values - y))
 
 def buoy_extraction(base, x, y, outname, variables, grid_type):
     """Extract equivalent buoy point data from WW3 files."""
@@ -17,7 +18,8 @@ def buoy_extraction(base, x, y, outname, variables, grid_type):
         ds = xr.open_dataset(f)
         
         if grid_type == 'unstructured':
-            ds = ds.isel(node=nearest(ds, x, y))[variables]
+            ds = ds.isel(node=nearest(ds, x, y))[variables] #ww3
+            #ds = ds.isel(nSCHISM_hgrid_node=nearest(ds, x, y))[variables]  #WWM        
             #ds=ds.interp(node(ds,x,y),method='linear')[variables] #another way
         elif grid_type == 'structured':
             ds = ds.sel(lat=y, lon=x, method='nearest')[variables]
@@ -50,11 +52,21 @@ def process_buoys(points, input_path, output_path, variables, grid_type):
 def configure_experiment(exp_type):
     """Configure the experiment based on the chosen type."""
     if exp_type == 'unstructured_ww3':
-        exp = 'expb2_143_imptot'
+        exp = 'expb2_143_fct'
         grid_type = 'unstructured'
         variables = ['hs']
         input_path = f'/work/cmcc/jc11022/simulations/uGlobWW3/{exp}/output/ww3.*.nc'
         output_path = f'/work/cmcc/jc11022/simulations/uGlobWW3/{exp}/output/points/'
+
+    elif exp_type == 'unstructured_wwm':
+        #exp = 'martinica'
+        exp = 'martinica_143'
+        grid_type = 'unstructured'
+        variables = ['WWM_1']
+        #input_path = f'/work/cmcc/lm09621/work/WWMV/schismWwmIce/run_experiment_coarse/outputs_final/GESWP_ERA5_schismwwm_*.nc'#exp2
+        input_path = f'/work/cmcc/lm09621/work/WWMV/schismWwmIce/run_experiment_coarse/outputs_final_betamax1.43/GESWP_ERA5_schismwwm_*.nc'#exp1_beta143
+        output_path = f'/work/cmcc/jc11022/simulations/uGlobWW3/WWM/{exp}/output/points/'
+
     elif exp_type == 'structured_ww3':
         exp = 'expb2_143_imptot'
         grid_type = 'structured'
@@ -76,12 +88,13 @@ def main():
     """Main function to run the processing."""
     # Points file
     points_file = './pointsComparison.info'
+    #points_file = './pointsNDBC.info'
     
     # Load buoy points
     points = load_buoy_points(points_file)
 
     # Choose experiment type: 'unstructured_ww3', 'structured_ww3', or 'satellite'
-    exp_type = 'satellite'  # Change this as needed
+    exp_type = 'unstructured_ww3'  # Change this as needed
 
     # Configure experiment
     input_path, output_path, variables, grid_type = configure_experiment(exp_type)
