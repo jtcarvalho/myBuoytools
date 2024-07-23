@@ -1,0 +1,4 @@
+/work/cmcc/jc11022/projects/ww3Tools/myBuoytools/scripts/ww3EMODNET_scatter.py:86: RuntimeWarning: Mean of empty slice
+  n_bias_percent_mean = np.nanmean(valid_n_bias_percent_values)
+/work/cmcc/jc11022/projects/ww3Tools/myBuoytools/scripts/ww3EMODNET_scatter.py:126: RuntimeWarning: Mean of empty slice
+  n_rmse_percent_mean = np.nanmean(valid_n_rmse_percent_values)
