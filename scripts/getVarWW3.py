@@ -52,7 +52,7 @@ def process_buoys(points, input_path, output_path, variables, grid_type):
 def configure_experiment(exp_type):
     """Configure the experiment based on the chosen type."""
     if exp_type == 'unstructured_ww3':
-        exp = 'expb2_143_fct'
+        exp = 'expb2_143_psi'
         grid_type = 'unstructured'
         variables = ['hs']
         input_path = f'/work/cmcc/jc11022/simulations/uGlobWW3/{exp}/output/ww3.*.nc'
@@ -68,7 +68,7 @@ def configure_experiment(exp_type):
         output_path = f'/work/cmcc/jc11022/simulations/uGlobWW3/WWM/{exp}/output/points/'
 
     elif exp_type == 'structured_ww3':
-        exp = 'expb2_143_imptot'
+        exp = 'global_reg'
         grid_type = 'structured'
         variables = ['hs']
         input_path = f'/work/cmcc/jc11022/simulations/uGlobWW3/{exp}/output/ww3.*.nc'
@@ -87,9 +87,10 @@ def configure_experiment(exp_type):
 def main():
     """Main function to run the processing."""
     # Points file
-    points_file = './pointsComparison.info'
+    points_file = './pointsEMODNET.info'
     #points_file = './pointsNDBC.info'
-    
+    #points_file = './pointsComparison.info'
+
     # Load buoy points
     points = load_buoy_points(points_file)
 
