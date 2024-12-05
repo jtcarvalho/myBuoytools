@@ -1,21 +1,12 @@
-#%%
-import os
-import numpy as np
-import xarray as xr
-import pandas as pd
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-from matplotlib.colors import LinearSegmentedColormap
-from cartopy.mpl.gridliner import LongitudeFormatter, LatitudeFormatter
 
 def calculate_nbias(observados, modelados):
-    n_bias_percent_values = []
+    if len(observados) == 0 or len(modelados) == 0:
+        return np.nan
 
+    n_bias_percent_values = []
     for i in range(len(observados)):
-        if not np.isnan(observados[i]) and not np.isnan(modelados[i]):
-            bias = np.sum(modelados[i] - observados[i])
+        if not np.isnan(observados[i]) and not np.isnan(modelados[i]) and observados[i] != 0:
+            bias = modelados[i] - observados[i]
             n_bias = bias / observados[i]
             n_bias_percent = n_bias * 100
             n_bias_percent_values.append(n_bias_percent)
@@ -29,11 +20,13 @@ def calculate_nbias(observados, modelados):
 
 
 def calculate_nrmse(observados, modelados):
-    n_rmse_percent_values = []
+    if len(observados) == 0 or len(modelados) == 0:
+        return np.nan
 
+    n_rmse_percent_values = []
     for i in range(len(observados)):
-        if not np.isnan(observados[i]) and not np.isnan(modelados[i]):
-            rmse = np.sqrt((np.sum(modelados[i] - observados[i])) ** 2)
+        if not np.isnan(observados[i]) and not np.isnan(modelados[i]) and observados[i] != 0:
+            rmse = np.sqrt((modelados[i] - observados[i]) ** 2)
             n_rmse = rmse / observados[i]
             n_rmse_percent = n_rmse * 100
             n_rmse_percent_values.append(n_rmse_percent)
@@ -46,12 +39,25 @@ def calculate_nrmse(observados, modelados):
     return n_rmse_percent_mean
 
 
-
-
-def getStationInfo(buoy_path, arq):
+def getStationInfo_emodnet(buoy_path, arq):
     file_path = os.path.join(buoy_path, arq)
-    arq1 = xr.open_dataset(file_path)
+    arq1 = xr.open_dataset(file_path, engine='netcdf4')
     try:
+        station_info = {
+            'Latitude': arq1['latitude'][0].values,
+            'Longitude': arq1['longitude'][0].values
+        }
+    except Exception as e:
+        print(f"Failed to fetch information for file: {arq}. Error: {e}")
+        station_info = None
+    finally:
+        arq1.close()
+    return station_info
+
+def getStationInfo_ndbc(buoy_path, arq):
+    file_path = os.path.join(buoy_path, arq)
+    try:
+        arq1 = xr.open_dataset(file_path)
         station_info = {
             'Latitude': arq1['latitude'].values,
             'Longitude': arq1['longitude'].values
@@ -64,14 +70,13 @@ def getStationInfo(buoy_path, arq):
 
     return station_info
 
+
 def create_custom_cmap(colors, n_colors):
-    # Create a color map with the defined colors and number of intervals
     custom_cmap = LinearSegmentedColormap.from_list('custom_cmap', colors, N=n_colors)
     return custom_cmap
 
 
 def plot_map_nbias(all_longitudes, all_latitudes, n_bias_percent_values):
-    
     fig = plt.figure(figsize=(10, 6))
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     ax.set_global()
@@ -105,14 +110,14 @@ def plot_map_nbias(all_longitudes, all_latitudes, n_bias_percent_values):
 
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    plt.title('EMODNET Buoy Positions - NBIAS')
+    plt.title('Buoy Positions - NBIAS')
     plt.grid(True)
     plt.tight_layout()
-    save_name = f'../figs/emodnetBuoysNBIAS.jpeg'  
+    save_name = f'../figs/ndbcBuoysNBIAS.jpeg'  
     plt.savefig(save_name, dpi=300)
 
+
 def plot_map_nrmse(all_longitudes, all_latitudes, n_rmse_percent_values):
-    
     fig = plt.figure(figsize=(10, 6))
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     ax.set_global()
@@ -146,26 +151,24 @@ def plot_map_nrmse(all_longitudes, all_latitudes, n_rmse_percent_values):
 
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    plt.title('EMODNET Buoy Positions - NRMSE')
+    plt.title('Buoy Positions - NRMSE')
     plt.grid(True)
     plt.tight_layout()
-    save_name = f'../figs/emodnetBuoysNRMSE.jpeg'  
+    save_name = f'../figs/ndbcBuoysNRMSE.jpeg'  
     plt.savefig(save_name, dpi=300)
 
 
-
-def check_data(buoy,model):
+def check_data_ndbc(buoy, model):
     try:
-        #--- Open files
+        # Open files
         buoy_data = xr.open_dataset(buoy)
         model_data = xr.open_dataset(model)
 
-        #--- Check common dates     
-        valid_dates_buoy = buoy_data['time'].where(~np.isnan(buoy_data['VHM0']), drop=True)
+        # Check common dates     
+        valid_dates_buoy = buoy_data['time'].where(~np.isnan(buoy_data['hs']), drop=True)
         common_dates = pd.Index(valid_dates_buoy).intersection(model_data['time'])
-        #common_dates = np.intersect1d(buoy_data['time'].values, model_data['time'].values)
         return common_dates if not common_dates.empty else None
-        
+
     except Exception as e:
         print(f"An error occurred while checking the NetCDF file: {e}")
         return None
@@ -173,68 +176,45 @@ def check_data(buoy,model):
         buoy_data.close()
         model_data.close()
 
+def check_data_emodnet(buoy, model):
+    buoy_data = None
+    model_data = None
 
-# Definindo suas variáveis e caminhos
-buoy_path = '/data/cmcc/jc11022/buoys/emodnet/'
-exp = 'expb2_143_psi'
-model_path = f'/work/cmcc/jc11022/simulations/uGlobWW3/{exp}/output/points/'
-#stations = ['42001', '42002']  
+    try:
+        buoy_data = xr.open_dataset(buoy, engine='netcdf4')
+        model_data = xr.open_dataset(model, engine='netcdf4')
 
-arqs_nc = [arq for arq in os.listdir(buoy_path) if arq.endswith('.nc')]
-stations = []
-for arq in arqs_nc:
-    station_id = os.path.splitext(arq)[0]  # Get ID from file without extension
-    stations.append(station_id) # List of stations IDs
+        reference_date = pd.to_datetime('2020-01-01')
+        buoy_data['time'] = reference_date + pd.to_timedelta(buoy_data.time.values, unit='h')
+        buoy_data['VHM0'] = xr.where(buoy_data['VHM0'] == 9.96921e+36, np.nan, buoy_data['VHM0'])
+        valid_dates_buoy = buoy_data['time'].where(~np.isnan(buoy_data['VHM0']), drop=True)
+        common_dates = pd.Index(valid_dates_buoy).intersection(pd.Index(model_data['time'].values))
 
-
-all_latitudes = []
-all_longitudes = []
-n_bias_percent_values = []
-n_rmse_percent_values = []
-
-for station_id in stations:
-    buoy_file = os.path.join(buoy_path, f"{station_id}.nc")
-    model_file = os.path.join(model_path, f"ww3_{station_id}.nc")
-
-    common_dates = check_data(buoy_file, model_file)
-
-    if common_dates is not None:
-        buoy_data = xr.open_dataset(buoy_file)
-        model_data = xr.open_dataset(model_file)
-
-        buoy_data_common = buoy_data.sel(time=common_dates)
-        model_data_common = model_data.sel(time=common_dates)
-
-        observed = buoy_data_common['VHM0'].values
-        modeled = model_data_common['hs'].values
-
-        # Aqui você pode fazer o que for necessário com 'observed' e 'modeled'
-        print(f"Processing data for station {station_id}")
-        print(f"Observed: {observed}")
-        print(f"Modeled: {modeled}")
-
-        # Fecha os datasets após uso
-        buoy_data.close()
-        model_data.close()
-    else:
-        print(f"No common dates for {station_id}. Going to next station...")
+        return common_dates if not common_dates.empty else None, buoy_data, model_data
+    
+    except Exception as e:
+        print(f"An error occurred while checking the NetCDF file: {e}")
+        return None, buoy_data, model_data
+    
+    finally:
+        if buoy_data is not None:
+            buoy_data.close()
+        if model_data is not None:
+            model_data.close()
 
 
-    n_bias_percent_value = calculate_nbias(observed, modeled)
-    n_rmse_percent_value = calculate_nrmse(observed, modeled)
-
-    latitudes = getStationInfo(buoy_path, f"{station_id}.nc")['Latitude']
-    longitudes = getStationInfo(buoy_path, f"{station_id}.nc")['Longitude']
-
-    print(f"Station {station_id}: NBIAS Percentage = {n_bias_percent_value}")
-
-    all_latitudes.extend(latitudes)
-    all_longitudes.extend(longitudes)
-    n_bias_percent_values.append(n_bias_percent_value)
-    n_rmse_percent_values.append(n_rmse_percent_value)
-
-plot_map_nbias(all_longitudes,all_latitudes,n_bias_percent_values)
-plot_map_nrmse(all_longitudes,all_latitudes,n_rmse_percent_values)
+def flatten_list(nested_list):
+    flattened_list = []
+    for item in nested_list:
+        if isinstance(item, (list, np.ndarray)):
+            if isinstance(item, np.ndarray) and item.ndim == 0:
+                # Convert 0-d array to a list
+                flattened_list.append(item.tolist())
+            else:
+                flattened_list.extend(flatten_list(item))  # Recursively flatten the list
+        else:
+            flattened_list.append(item)
+    return flattened_list
 
 
-# %%
+
