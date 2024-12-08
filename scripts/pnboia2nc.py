@@ -7,9 +7,9 @@ import pandas as pd
 
 # Input CSV file
 
-arqname='metocean_bacia-de-santos-ax24'
+#arqname='metocean_bacia-de-santos-ax24'
 #arqname='metocean_bacia-de-campos-ax23'
-#arqname = 'metocean_bacia-de-santos-bm01'
+arqname = 'metocean_bacia-de-santos-bm01'
 arq = f'../data/buoys/pnboia/{arqname}.csv'
 
 # Read CSV file
@@ -76,4 +76,4 @@ plt.grid()
 plt.tight_layout()
 plt.show()
 
-# %%
+
