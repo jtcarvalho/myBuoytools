@@ -13,13 +13,13 @@ from tools import *
 
 
 # Define your variables and paths
-buoy_path1= '/Users/jtakeo/googleDrive/myProjects/myBuoyTools/ndbc/buoys/ndbc/'
-model_path1 = f'/Users/jtakeo/googleDrive/myProjects/myBuoyTools/ndbc/ww3/points_ndbc'
+buoy_path1= '/data/cmcc/jc11022/buoys/ndbc/'
+model_path1 = f'/work/cmcc/jc11022/simulations/uGlobWW3/highResExperiments/gloH_article_exps/exp1_era5/output/points_ndbc'
 stations1 = [os.path.splitext(arq)[0] for arq in os.listdir(buoy_path1) if arq.endswith('.nc')]
 
 # Definindo suas variáveis e caminhos
-buoy_path2= '/Users/jtakeo/googleDrive/myProjects/myBuoyTools/ndbc/buoys/emodnet/'
-model_path2 = f'/Users/jtakeo/googleDrive/myProjects/myBuoyTools/ndbc/ww3/points_emodnet'
+buoy_path2= '/data/cmcc/jc11022/buoys/emodnet/'
+model_path2 = f'/work/cmcc/jc11022/simulations/uGlobWW3/highResExperiments/gloH_article_exps/exp1_era5/output/points_emodnet'
 #stations = ['42055','42067','6201051','6201050']  
 arqs_nc2 = [arq for arq in os.listdir(buoy_path2) if arq.endswith('.nc')]
 stations2 = [os.path.splitext(arq)[0] for arq in os.listdir(buoy_path2) if arq.endswith('.nc')]
