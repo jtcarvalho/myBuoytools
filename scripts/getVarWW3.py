@@ -91,8 +91,8 @@ def configure_experiment(exp_type):
 def main():
     """Main function to run the processing."""
     # Points file
-    #points_file = './pointsEMODNET.info'
-    points_file = './pointsNDBC.info'
+    #points_file = '../aux/pointsEMODNET.info'
+    points_file = '../aux/pointsNDBC.info'
     #points_file = './pointsComparison.info'
 
     # Load buoy points
