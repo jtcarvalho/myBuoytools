@@ -218,3 +218,16 @@ def flatten_list(nested_list):
 
 
 
+# def replace_comma():
+#        text = open("data/buoy/ISPRA2440.csv", "r")
+#        text = ''.join([i for i in text]).replace(",", ".")
+#        x = open("dir.csv", "w")
+#        x.writelines(text)
+#        x.close()
+#        return
+
+
+
+# def getVectComponents(direction):
+#     return -np.sin(direction), -np.cos(direction)
+
