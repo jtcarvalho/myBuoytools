@@ -124,7 +124,7 @@ def plot_map_nbias(all_longitudes, all_latitudes, n_bias_percent_values):
     plt.title('Buoy Positions - NBIAS')
     plt.grid(True)
     plt.tight_layout()
-    save_name = f'../figs/ndbcBuoysNBIAS.jpeg'  
+    save_name = f'../figs/buoysNBIAS.jpeg'  
     plt.savefig(save_name, dpi=300)
 
 
@@ -165,7 +165,7 @@ def plot_map_nrmse(all_longitudes, all_latitudes, n_rmse_percent_values):
     plt.title('Buoy Positions - NRMSE')
     plt.grid(True)
     plt.tight_layout()
-    save_name = f'../figs/ndbcBuoysNRMSE.jpeg'  
+    save_name = f'../figs/buoysNRMSE.jpeg'  
     plt.savefig(save_name, dpi=300)
 
 
