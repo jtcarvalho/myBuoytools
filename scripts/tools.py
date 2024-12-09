@@ -1,3 +1,14 @@
+import os
+import numpy as np
+import xarray as xr
+import pandas as pd
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+from matplotlib.colors import LinearSegmentedColormap
+from cartopy.mpl.gridliner import LongitudeFormatter, LatitudeFormatter
+
 
 def calculate_nbias(observados, modelados):
     if len(observados) == 0 or len(modelados) == 0:

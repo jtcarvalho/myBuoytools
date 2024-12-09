@@ -1,9 +1,12 @@
-/bak_figs  
-/bak_scripts
-/scripts/run.sh
-/scripts/clean.sh
-/data/buoys
-/data/metocean_bacia-de-campos-ax23.nc
-/data/metocean_bacia-de-santos-ax24.nc
-/notebooks/rascunho.ipynb
+./bak_figs  
+./bak_scripts
+./scripts/run.sh
+./scripts/clean.sh
+./data/buoys
+./data/metocean_bacia-de-campos-ax23.nc
+./data/metocean_bacia-de-santos-ax24.nc
+./notebooks/rascunho.ipynb
+./figs/ndbcBuoysNBIAS.jpeg
+./figs/ndbcBuoysNRMSE.jpeg
+
 
