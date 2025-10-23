@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.colors import LinearSegmentedColormap
 from cartopy.mpl.gridliner import LongitudeFormatter, LatitudeFormatter
+from tools import calculate_nbias, calculate_nrmse, remove_spikes_and_smooth, preprocess_wave_data
 
-def calculate_nbias(observados, modelados):
+def calculate_nbias_old(observados, modelados):
     if len(observados) == 0 or len(modelados) == 0:
         return np.nan
 
@@ -194,8 +195,9 @@ for station_id in stations:
         print(f"Observed: {observed}")
         print(f"Modeled: {modeled}")
 
-        n_bias_percent_value = calculate_nbias(observed, modeled)
-        n_rmse_percent_value = calculate_nrmse(observed, modeled)
+        # Apply preprocessing (spike removal and smoothing) and calculate statistics
+        n_bias_percent_value = calculate_nbias(observed, modeled, preprocess=True)
+        n_rmse_percent_value = calculate_nrmse(observed, modeled, preprocess=True)
 
         station_info = getStationInfo(buoy_path, f"{station_id}.nc")
         latitudes = station_info['Latitude']

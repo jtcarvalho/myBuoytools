@@ -1,7 +1,117 @@
 
-def calculate_nbias(observados, modelados):
+import os
+import numpy as np
+import xarray as xr
+import pandas as pd
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+from matplotlib.colors import LinearSegmentedColormap
+from cartopy.mpl.gridliner import LongitudeFormatter, LatitudeFormatter
+
+
+def remove_spikes_and_smooth(data, threshold_factor=3.0, max_wave_height=25.0, apply_smoothing=True, smooth_window=5):
+    """
+    Remove spikes, unrealistic values, and optionally smooth time series data
+    
+    Parameters:
+    - data: pandas Series or numpy array with time series data
+    - threshold_factor: multiplier for spike detection threshold
+    - max_wave_height: maximum realistic wave height (meters)
+    - apply_smoothing: whether to apply additional smoothing
+    - smooth_window: window size for smoothing filter
+    
+    Returns:
+    - cleaned and optionally smoothed data
+    """
+    if isinstance(data, np.ndarray):
+        data = pd.Series(data)
+    
+    if len(data) < 5:
+        return data
+    
+    # First, remove obviously unrealistic values
+    realistic_mask = (data > 0) & (data < max_wave_height) & np.isfinite(data)
+    n_unrealistic = (~realistic_mask).sum()
+    
+    if n_unrealistic > 0:
+        # Fill unrealistic values with NaN
+        data_temp = data.copy()
+        data_temp[~realistic_mask] = np.nan
+    else:
+        data_temp = data.copy()
+    
+    # Apply spike detection on realistic values only
+    if len(data_temp.dropna()) < 5:
+        return data_temp
+    
+    # Calculate rolling statistics on valid data
+    window = min(25, len(data_temp.dropna()) // 4)  # Adaptive window size
+    if window < 3:
+        window = 3
+    
+    rolling_median = data_temp.rolling(window=window, center=True, min_periods=1).median()
+    rolling_std = data_temp.rolling(window=window, center=True, min_periods=1).std()
+    
+    # Identify additional spikes
+    diff_from_median = np.abs(data_temp - rolling_median)
+    threshold = threshold_factor * rolling_std
+    
+    # Replace spikes with rolling median
+    spike_mask = (diff_from_median > threshold) & np.isfinite(data_temp)
+    cleaned_data = data_temp.copy()
+    cleaned_data[spike_mask] = rolling_median[spike_mask]
+    
+    # Apply additional smoothing if requested
+    if apply_smoothing and len(cleaned_data.dropna()) > smooth_window:
+        # Use rolling mean for smoothing
+        smoothed_data = cleaned_data.rolling(window=smooth_window, center=True, min_periods=1).mean()
+        return smoothed_data
+    
+    return cleaned_data
+
+
+def preprocess_wave_data(observed, modeled, apply_smoothing=True):
+    """
+    Preprocess wave data by removing spikes and optionally smoothing
+    
+    Parameters:
+    - observed: observed wave height data (numpy array or pandas Series)
+    - modeled: modeled wave height data (numpy array or pandas Series)
+    - apply_smoothing: whether to apply smoothing
+    
+    Returns:
+    - tuple of (cleaned_observed, cleaned_modeled)
+    """
+    # Convert to pandas Series if needed
+    if isinstance(observed, np.ndarray):
+        observed = pd.Series(observed)
+    if isinstance(modeled, np.ndarray):
+        modeled = pd.Series(modeled)
+    
+    # Process both datasets
+    cleaned_observed = remove_spikes_and_smooth(observed, apply_smoothing=apply_smoothing)
+    cleaned_modeled = remove_spikes_and_smooth(modeled, apply_smoothing=apply_smoothing)
+    
+    return cleaned_observed.values, cleaned_modeled.values
+
+
+def calculate_nbias(observados, modelados, preprocess=True):
+    """
+    Calculate normalized bias (NBIAS) between observed and modeled data
+    
+    Parameters:
+    - observados: observed data
+    - modelados: modeled data  
+    - preprocess: whether to apply spike removal and smoothing
+    """
     if len(observados) == 0 or len(modelados) == 0:
         return np.nan
+
+    # Apply preprocessing if requested
+    if preprocess:
+        observados, modelados = preprocess_wave_data(observados, modelados, apply_smoothing=True)
 
     n_bias_percent_values = []
     for i in range(len(observados)):
@@ -19,9 +129,21 @@ def calculate_nbias(observados, modelados):
     return n_bias_percent_mean
 
 
-def calculate_nrmse(observados, modelados):
+def calculate_nrmse(observados, modelados, preprocess=True):
+    """
+    Calculate normalized root mean square error (NRMSE) between observed and modeled data
+    
+    Parameters:
+    - observados: observed data
+    - modelados: modeled data
+    - preprocess: whether to apply spike removal and smoothing
+    """
     if len(observados) == 0 or len(modelados) == 0:
         return np.nan
+
+    # Apply preprocessing if requested
+    if preprocess:
+        observados, modelados = preprocess_wave_data(observados, modelados, apply_smoothing=True)
 
     n_rmse_percent_values = []
     for i in range(len(observados)):
