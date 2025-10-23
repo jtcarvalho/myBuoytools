@@ -1,0 +1,38 @@
+WW3 Model Validation: Results and Discussion
+============================================
+
+1. General Model Performance (Normalized Statistics)
+---------------------------------------------------
+Figure 1 shows the distribution of the main performance metrics for the WW3 model compared to NDBC and EMODNET buoy observations, considering the entire analysis period. The evaluated metrics are NBIAS (%), NRMSE (%), MAE (m), and SI (Scatter Index).
+
+- NBIAS (%): The normalized bias distribution indicates that most buoys have values close to zero, suggesting no strong systematic trend. However, there is a slight asymmetry, with some buoys showing negative bias (underestimation) and others positive (overestimation). The model tends to be slightly underestimating for some EMODNET buoys, while NDBC buoys are more centered.
+- NRMSE (%): The normalized root mean square error is concentrated between 10% and 30% for most buoys, with a right tail indicating some cases of higher error. Performance is similar between NDBC and EMODNET, although EMODNET buoys show slightly greater spread.
+- MAE (m): The mean absolute error is predominantly below 0.4 m for most buoys, with lower values indicating good model fit to observations. The NDBC distribution is more concentrated, while EMODNET shows greater variability.
+- SI (Scatter Index): SI values are mostly between 0.1 and 0.3, which are considered good for operational applications. Again, EMODNET shows slightly greater spread, suggesting higher model uncertainty in those regions.
+
+General interpretation:
+The WW3 model shows robust performance for most buoys, with low errors and bias close to zero. The slight asymmetry in the distributions suggests that, although the model does not have a global systematic trend, there are specific cases of underestimation or overestimation, especially for some EMODNET buoys. This may be related to regional differences in forcing, input data quality, or limitations in the representation of local physical processes.
+
+2. Performance in Extreme Events (P99)
+--------------------------------------
+Figure 2 presents the same metrics, but restricted to extreme events (99th percentile of observed wave heights).
+
+- NBIAS P99 (%): There is a shift in the distribution towards negative values, especially for NDBC buoys, indicating that the model tends to systematically underestimate extreme events. For EMODNET, the spread is larger, with both under- and overestimation, but still predominantly negative bias.
+- NRMSE P99 (%): The normalized RMSE for extremes is higher and more dispersed than in the general case, with values often above 20%. This highlights the model's greater difficulty in capturing the variability of the most severe events.
+- MAE P99 (m): The mean absolute error for extremes is considerably higher, with values exceeding 1.5 m for some buoys, especially NDBC. This reinforces the model's limitation in adequately simulating wave peaks.
+- SI P99: The scatter index for extremes is also higher, with values often above 0.2, indicating lower model accuracy in more severe sea states.
+
+Interpretation of extremes:
+The WW3 model, while performing well for average conditions, shows a clear limitation in simulating extreme events. The systematic underestimation of peaks (negative bias in NBIAS P99) is a critical result, as it can directly impact maritime safety and coastal engineering applications. The greater spread in errors and SI for P99 suggests that the model cannot capture the full variability of the most severe events, possibly due to limitations in spatial/temporal resolution, physical parameterizations, or wind data quality during extreme conditions.
+
+3. Comparison between NDBC and EMODNET
+--------------------------------------
+- NDBC: NDBC buoys show more concentrated distributions and lower spread in the metrics, both for general and P99 cases. This may indicate greater data homogeneity or better model calibration for these regions.
+- EMODNET: EMODNET buoys show greater variability in the metrics, with longer tails and more occurrences of extreme values, both in error and bias. This may reflect greater regional complexity, lower buoy density, or specific challenges in the Northeast Atlantic and Mediterranean.
+
+4. Final Considerations
+----------------------
+- The WW3 model is reliable for simulating waves under average conditions, with low errors and reduced bias.
+- For extreme events (P99), the model tends to underestimate wave heights, with a significant increase in errors and spread, especially for some buoys.
+- The detailed analysis of the distributions allows identification of regions/buoys where the model performs worse, suggesting the need for regional adjustments, improvements in physical parameterizations, or data assimilation.
+- Caution is recommended when using model results for critical applications in extreme events, especially where underestimation may compromise safety.
